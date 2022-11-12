@@ -1,3 +1,5 @@
+import SwiftUI
+
 // Solve it without "Error"
 
 func squareRootCheck(_ value: Int) -> String {
