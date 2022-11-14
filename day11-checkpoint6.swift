@@ -12,16 +12,16 @@ struct Car {
                 gear += 1
                 print("Changed to \(gear) gear")
             }
-            if gear > 9 {
+            else {
                 print("Gear can't go any higher")
             }
         }
-        else if !up {
+        else {
             if gear > 1 {
                 gear -= 1
                 print("Lowered to \(gear) gear")
             }
-            if gear == 1 {
+            else {
                 print("Gear can't go any lower")
             }
         }
