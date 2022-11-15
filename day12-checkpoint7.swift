@@ -1,4 +1,4 @@
-//day 12 checkpoint 6
+//day 12 checkpoint 7
 
 class Animal {
     let legs: Int
