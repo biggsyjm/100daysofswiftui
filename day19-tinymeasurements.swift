@@ -8,101 +8,106 @@
 import SwiftUI
 
 struct ContentView: View {
-    let measurementOptions = ["millileters", "teaspoons", "tablespoons"]
-    @State private var convertFrom = "millileters"
-    @State private var convertTo = "teaspoons"
-    @State private var value = 5.0
+    @State private var convertFrom = 0
+    @State private var convertTo = 0
+    @State private var value = ""
     @FocusState private var amountIsFocused: Bool
     
-    private let formatStyle = Measurement<UnitVolume>.FormatStyle(
-           width: .wide,
-           numberFormatStyle: .number
-       )
-    
-    var output = 5.4
-    
-    
-    
-    var convertedValue: Measurement<UnitVolume> {
-        switch convertFrom {
-        case "millileters" :
-            let convertFromMillileters = Measurement(value: value, unit: UnitVolume.milliliters)
-            if convertTo == "teaspoons" {
-                let convertedValue = convertFromMillileters.converted(to: UnitVolume.imperialTeaspoons)
-                return convertedValue
+    enum Unit: String, CaseIterable {
+        case millileters
+        case teaspoons
+        case tablespoons
+        
+        var unitVolume: UnitVolume {
+            switch self {
+            case .millileters: return UnitVolume.milliliters
+            case .teaspoons: return UnitVolume.imperialTeaspoons
+            case .tablespoons: return UnitVolume.imperialTablespoons
             }
-            else {
-                let convertedValue = convertFromMillileters.converted(to: UnitVolume.imperialTablespoons)
-                return convertedValue
-            }
-        case "teaspoons" :
-            let convertFromTeaspoons = Measurement(value: value, unit: UnitVolume.imperialTeaspoons)
-            if convertTo == "tablespoons" {
-                let convertedValue = convertFromTeaspoons.converted(to: UnitVolume.imperialTablespoons)
-                return convertedValue
-            } else {
-                let convertedValue = convertFromTeaspoons.converted(to: UnitVolume.milliliters)
-                return convertedValue
-            }
-        case "tablespoons" :
-            let convertFromTablespoons = Measurement(value: value, unit: UnitVolume.imperialTablespoons)
-            if convertTo == "teaspoons" {
-                let convertedValue = convertFromTablespoons.converted(to: UnitVolume.imperialTeaspoons)
-                return convertedValue
-            } else {
-                let convertedValue = convertFromTablespoons.converted(to: UnitVolume.milliliters)
-                return convertedValue
-            }
-        default :
-            let convertedValue = Measurement(value: 0, unit: UnitVolume.milliliters)
-            return convertedValue
         }
+    }
+    
+    var inputUnits : String {
+        if convertFrom == 0 {
+           return "millileters"
+        }
+        if convertFrom == 1 {
+           return "teaspoons"
+        }
+        else {
+            return "tablespoons"
+        }
+    }
+    
+    var outputUnits : String {
+        if convertTo == 0 {
+           return "millileters"
+        }
+        if convertTo == 1 {
+           return "teaspoons"
+        }
+        else {
+            return "tablespoons"
+        }
+    }
+    
+    let volumeUnits = Unit
+        .allCases
+        .compactMap { $0.rawValue }
+    
+    var output: Double {
+        guard let value = Double(self.value) else {
+            return 0
+        }
+        guard let convertFrom = Unit(rawValue: volumeUnits[self.convertFrom]) else {
+            return 0
+        }
+        guard let convertTo = Unit(rawValue: volumeUnits[self.convertTo]) else {
+            return 0
+        }
+        return Measurement(
+            value: value,
+            unit: convertFrom.unitVolume
+        )
+        .converted(to: convertTo.unitVolume)
+        .value
     }
     
     var body: some View {
         NavigationView {
             Form {
                 Section {
-                    Picker("Input", selection: $convertFrom) {
-                        ForEach(measurementOptions, id:\.self) {
-                            Text($0)
-                        }
-                    }
-                } header: {
-                    Text("Convert From")
-                }
-                
-                Section {
-                    Picker("Output", selection: $convertTo) {
-                        ForEach(measurementOptions, id:\.self) {
-                            Text($0)
-                        }
-                    }
-                } header: {
-                    Text("Convert To")
-                }
-                
-                Section {
-                    TextField("Amount", value: $value, format: .number)
+                    TextField("Amount", text: $value)
                         .keyboardType(.decimalPad)
                         .focused($amountIsFocused)
+                    
+                    Picker("Input", selection: $convertFrom) {
+                        ForEach(0..<volumeUnits.count) {
+                            Text(self.volumeUnits[$0])
+                        }
+                    } .pickerStyle(.segmented)
                 } header: {
-                    Text("How many \(convertFrom)?")
+                            Text("Convert From")
+                    }
+                    Section {
+                        Text("\(output, specifier: "%.2f")")
+                        Picker("Output", selection: $convertTo) {
+                            ForEach(0..<volumeUnits.count) {
+                                Text(self.volumeUnits[$0])
+                            }
+                        } .pickerStyle(.segmented)
+                    } header: {
+                        Text("Convert To")
+                    }
+                    .navigationTitle("Tiny Measurements")
                 }
-                
-                Section {
-                    Text(convertedValue, format: .measurement(width: .wide))
-                } header: {
-                    Text("Converted to \(convertTo)")
-                }
-                .navigationTitle("Tiny Measurements")
             }
         }
     }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+    
+    struct ContentView_Previews: PreviewProvider {
+        static var previews: some View {
+            ContentView()
+        }
     }
-}
+
